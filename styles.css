@@ -1,7 +1,7 @@
-/* body{
-    height: calc(100%-8px);
+body{
+    height: calc(100% - 8px);
     margin: 4px;
-} */
+}
 
 canvas{
     max-width: 100%;

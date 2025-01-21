@@ -41,7 +41,7 @@ function sample2rate(s){
 }
 
 let main = makehbox()
-main.style = "gap: 20px"
+main.style = "gap: 20px; height:100%"
 document.body.appendChild(main)
 
 let sampleDiv = makevbox()
@@ -78,7 +78,7 @@ main.appendChild(views)
 
 let weightsView = makeArrayView(840)
 views.appendChild(weightsView.html)
-
+weightsView.html.style = "width:50%"
 let visualize = true
 let runMode = "normal"
 
