@@ -128,6 +128,13 @@ function autoTrain(){
             weightsView.setArray("WEIGHTS",weights2map(excSynapse.weights,MNIST_SIZE,snn_size).map(v=>v*3000),MNIST_SIZE*snn_size)
         }
         let digitVote = new Array(10).fill(0)
+        if(visualize){
+            for(let i=0; i<hiddenSize; i++){
+                if(fireCounts[i]>0){
+                    weightsView.drawFrame(i%10,Math.floor(i/10),snn_size)
+                }
+            }
+        }
         for(let i=0; i<hiddenSize; i++){
             let mx = 0
             let mxj = 0

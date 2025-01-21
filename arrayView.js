@@ -30,6 +30,11 @@ function makeArrayView(size){
                     ctx.fillRect(cellSize*x,cellSize*y,cellSize,cellSize)
                 }
             }
+        },
+        drawFrame: (x,y,asize)=>{
+            let cellSize = size/asize
+            ctx.strokeStyle = 'red'
+            ctx.strokeRect(cellSize*x,cellSize*y,cellSize,cellSize)
         }
     }
 }
