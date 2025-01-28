@@ -65,7 +65,8 @@ async function readMNIST(){
     const [trainSet, trainLabel, testSet, testLabel] = await Promise.all(filePromises);
     
     return {
-        // train: readImagesLabels(trainSet, trainLabel),
+        train: readImagesLabels(trainSet, trainLabel),
         test: readImagesLabels(testSet, testLabel)
     }
 }
+

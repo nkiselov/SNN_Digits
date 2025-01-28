@@ -1,6 +1,6 @@
 
-function eyeMatrix(size){
-    return [...Array(size).keys()].map((ind1)=>[...Array(size).keys()].map((ind2)=>ind1==ind2?1:0))
+function eyeMatrix(size,val=1){
+    return [...Array(size).keys()].map((ind1)=>[...Array(size).keys()].map((ind2)=>ind1==ind2?val:0))
 }
 
 function sameMatrix(n,m,val){
@@ -31,4 +31,14 @@ function weights2map(weights,sizePre,sizePost){
         }
     }
     return res
+}
+
+function sumArr(arr){
+    return arr.reduce((sm, a) => sm+a, 0)
+}
+
+function addArr(to,from){
+    for(let i=0; i<from.length; i++){
+        to[i] += from[i]
+    }
 }

@@ -5,15 +5,17 @@ function makeButton(label, onclick){
     return button
 }
 
-function makehbox(){
+function makehbox(elems){
     let hbox = document.createElement("div")
     hbox.className = "hbox"
+    elems.forEach((e)=>hbox.appendChild(e))
     return hbox
 }
 
-function makevbox(){
+function makevbox(elems){
     let vbox = document.createElement("div")
     vbox.className = "vbox"
+    elems.forEach((e)=>vbox.appendChild(e))
     return vbox
 }
 
@@ -43,4 +45,35 @@ function makeInput(label,value,onchange){
     cont.appendChild(text)
     cont.appendChild(inp)
     return cont
+}
+
+function makeFileInput(label,onfile){
+    let inp = document.createElement("input")
+    inp.type = "file"
+    inp.style = "display: none"
+    inp.accept = ".json"
+    inp.addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    onfile(JSON.parse(e.target.result))
+                } catch (error) {
+                    console.error('Error parsing JSON:', error);
+                    alert('Error parsing JSON file. Please make sure it\'s a valid JSON file.');
+                }
+            };
+
+            reader.onerror = function(e) {
+                console.error('Error reading file:', e);
+                alert('Error reading file');
+            };
+
+            reader.readAsText(file);
+        }
+    });
+    let btn = makeButton(label,()=>inp.click())
+    return btn
 }
