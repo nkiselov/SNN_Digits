@@ -143,8 +143,8 @@ class Synapse{
 
 class LearningSynapse extends Synapse{
 
-    constructor(inp_size, out_size, tau, eqv, init_weights, ll_pre, ll_post, mu, x_tar, x_tau, w_max,  w_sums_max, w_sums_eff){
-        super(inp_size, out_size, tau, eqv, init_weights)
+    constructor(inp_size, out_size, tau, eqv, ll_pre, ll_post, mu, x_tar, x_tau, w_max,  w_sums_max, w_sums_eff){
+        super(inp_size, out_size, tau, eqv)
         this.ll_pre = ll_pre
         this.ll_post = ll_post
         this.mu = mu

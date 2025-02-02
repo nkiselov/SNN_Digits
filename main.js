@@ -4,13 +4,13 @@ document.getElementById("loading").remove()
 
 console.log(dataset)
 
-let snn_size = 30
+let snn_size = 10
 let hiddenSize = snn_size*snn_size
 let learnRate = 0.0002
 
 let periodInput = new PeriodicFireInput(MNIST_SIZE*MNIST_SIZE)
-let excSynapse = new LearningSynapse(MNIST_SIZE*MNIST_SIZE,hiddenSize,10,100,randMatrix(MNIST_SIZE*MNIST_SIZE,hiddenSize,0,0.1),
-learnRate,learnRate,1,3,30,0.4,6,0.5)
+let excSynapse = new LearningSynapse(MNIST_SIZE*MNIST_SIZE,hiddenSize,10,100,learnRate,learnRate,1,3,30,0.4,6,0.5)
+excSynapse.setWeights(randMatrix(MNIST_SIZE*MNIST_SIZE,hiddenSize,0,0.1))
 let inhibitOther = new InhibitOthers(hiddenSize)
 let inhSynapse = new Synapse(hiddenSize,hiddenSize,10,-40,eyeMatrix(hiddenSize,4))
 let lifLayer = new LIFLayer([excSynapse,inhSynapse],hiddenSize,20,0,40,0.2,100000)
@@ -43,8 +43,8 @@ let votesText = [...Array(10).keys()].map((v)=>makeh(v+"[0]"))
 
 let upscaleRate = 1.0
 function sample2rate(s){
-    // let sm = sumArr(s)
-    return s.map(v=>v*upscaleRate/1024)
+    let sm = sumArr(s)
+    return s.map(v=>v*upscaleRate/sm*40.0)
 }
 
 function getNeuronClass(){
@@ -69,9 +69,10 @@ let cwtexts = [...Array(11).keys()].map((v)=>makeh(v+": 0% 0 - 0"))
 let sumFireCounts = new Array(hiddenSize).fill(0)
 function autoTrain(){
     sampleSelector.selectNext()
+    let fireCounts = new Array(hiddenSize).fill(0)
 
     for(let i=0; i<4; i++){
-        upscaleRate = 1.0+0.15*i
+        upscaleRate = 1.0+0.1*i
 
         periodInput.setFireRates(sample2rate(selectedSample.img))
         if(learning){
@@ -87,7 +88,7 @@ function autoTrain(){
         lifLayer.relax()
 
         let inputSpikes = 0
-        let fireCounts = new Array(hiddenSize).fill(0)
+        fireCounts = new Array(hiddenSize).fill(0)
         for(let i=0; i<100; i++){
             let spks = snn.run_step()
             inputSpikes+=sumArr(spks[0])
@@ -95,60 +96,59 @@ function autoTrain(){
         }
         addArr(sumFireCounts,fireCounts)
         let outputSpikes = sumArr(fireCounts)
-        if(outputSpikes<10) continue;
-
-        if(visualize){
-            debugViews[0].setArray("FIRE_COUNTS",fireCounts.map(v=>v*10),snn_size)
-            debugViews[1].setArray("ACTIVITY",normalize(sumFireCounts),snn_size)
-            debugViews[2].setArray("HOMEOSTASIS",lifLayer.hemv,snn_size)
-            debugViews[4].setArray("WEIGHT SUM",normalize(excSynapse.w_sums),snn_size)
-            weightsView.setArray("WEIGHTS",weights2map(excSynapse.weights,MNIST_SIZE,snn_size).map(v=>v*1000),MNIST_SIZE*snn_size)
-        }
-        let digitVote = new Array(10).fill(0)
-        if(visualize){
-            for(let i=0; i<hiddenSize; i++){
-                if(fireCounts[i]>0){
-                    weightsView.drawFrame(i%snn_size,Math.floor(i/snn_size),snn_size)
-                }
-            }
-        }
-        for(let i=0; i<hiddenSize; i++){
-            let sm = sumArr(neuronVotes[i])
-            for(let j=0; j<10; j++){
-                if(fireCounts[i]>0)
-                digitVote[j]+=fireCounts[i]*Math.log((neuronVotes[i][j]+1)/(sm+10))
-            }
-        }
-        let mxVote = -Infinity
-        let mxInd = 0
-        for(let i=0; i<10; i++){
-            if(digitVote[i]>mxVote){
-                mxInd = i
-                mxVote = digitVote[i]
-            }
-            votesText[i].innerHTML = i+"["+digitVote[i].toFixed(2)+"]"
-            votesText[i].style = "font-weight: normal;"
-        }
-        votesText[mxInd].style = "font-weight: bold;"
-        respMatrix[selectedSample.label][mxInd]+=1
-        let correctSum = 0
-        let wrongSum = 0
-        for(let i=0; i<10; i++){
-            let correct = respMatrix[i][i]
-            let wrong = sumArr(respMatrix[i])-correct
-            correctSum+=correct
-            wrongSum+=wrong
-            cwtexts[i].innerHTML = i+": "+(100*correct/(correct+wrong)).toFixed(1)+"% "+correct+" - "+wrong
-        }
-        cwtexts[10].innerHTML = (100*correctSum/(correctSum+wrongSum)).toFixed(1)+"% "+correctSum+" - "+wrongSum
-        if(visualize){
-            debugViews[3].setArray("ACCURACY",normalize(respMatrix.flat()),10)
-        }
-        for(let i=0; i<hiddenSize; i++){
-            neuronVotes[i][selectedSample.label]+=fireCounts[i]
-        }
         console.log(selectedSample.label,inputSpikes,outputSpikes)
-        break
+        if(outputSpikes>10) break;
+    }
+
+    if(visualize){
+        debugViews[0].setArray("FIRE_COUNTS",fireCounts.map(v=>v*10),snn_size)
+        debugViews[1].setArray("ACTIVITY",normalize(sumFireCounts),snn_size)
+        debugViews[2].setArray("HOMEOSTASIS",lifLayer.hemv,snn_size)
+        debugViews[4].setArray("WEIGHT SUM",normalize(excSynapse.w_sums),snn_size)
+        weightsView.setArray("WEIGHTS",weights2map(excSynapse.weights,MNIST_SIZE,snn_size).map(v=>v*1000),MNIST_SIZE*snn_size)
+    }
+    let digitVote = new Array(10).fill(0)
+    if(visualize){
+        for(let i=0; i<hiddenSize; i++){
+            if(fireCounts[i]>0){
+                weightsView.drawFrame(i%snn_size,Math.floor(i/snn_size),snn_size)
+            }
+        }
+    }
+    for(let i=0; i<hiddenSize; i++){
+        let sm = sumArr(neuronVotes[i])
+        for(let j=0; j<10; j++){
+            if(fireCounts[i]>0)
+            digitVote[j]+=fireCounts[i]*Math.log((neuronVotes[i][j]+1)/(sm+10))
+        }
+    }
+    let mxVote = -Infinity
+    let mxInd = 0
+    for(let i=0; i<10; i++){
+        if(digitVote[i]>mxVote){
+            mxInd = i
+            mxVote = digitVote[i]
+        }
+        votesText[i].innerHTML = i+"["+digitVote[i].toFixed(2)+"]"
+        votesText[i].style = "font-weight: normal;"
+    }
+    votesText[mxInd].style = "font-weight: bold;"
+    respMatrix[selectedSample.label][mxInd]+=1
+    let correctSum = 0
+    let wrongSum = 0
+    for(let i=0; i<10; i++){
+        let correct = respMatrix[i][i]
+        let wrong = sumArr(respMatrix[i])-correct
+        correctSum+=correct
+        wrongSum+=wrong
+        cwtexts[i].innerHTML = i+": "+(100*correct/(correct+wrong)).toFixed(1)+"% "+correct+" - "+wrong
+    }
+    cwtexts[10].innerHTML = (100*correctSum/(correctSum+wrongSum)).toFixed(1)+"% "+correctSum+" - "+wrongSum
+    if(visualize){
+        debugViews[3].setArray("ACCURACY",normalize(respMatrix.flat()),10)
+    }
+    for(let i=0; i<hiddenSize; i++){
+        neuronVotes[i][selectedSample.label]+=fireCounts[i]
     }
 }
 
