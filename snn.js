@@ -46,6 +46,10 @@ class PeriodicFireInput{
         }
         return spk
     }
+
+    relax(){
+        this.cooldowns = new Array(this.size).fill(1)
+    }
 }
 
 class LIFLayer{

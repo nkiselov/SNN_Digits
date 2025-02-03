@@ -4,12 +4,12 @@ document.getElementById("loading").remove()
 
 console.log(dataset)
 
-let snn_size = 10
+let snn_size = 20
 let hiddenSize = snn_size*snn_size
 let learnRate = 0.0002
 
 let periodInput = new PeriodicFireInput(MNIST_SIZE*MNIST_SIZE)
-let excSynapse = new LearningSynapse(MNIST_SIZE*MNIST_SIZE,hiddenSize,10,100,learnRate,learnRate,1,3,30,0.4,6,0.5)
+let excSynapse = new LearningSynapse(MNIST_SIZE*MNIST_SIZE,hiddenSize,10,100,learnRate,learnRate,1,2,30,0.4,6,0.5)
 excSynapse.setWeights(randMatrix(MNIST_SIZE*MNIST_SIZE,hiddenSize,0,0.1))
 let inhibitOther = new InhibitOthers(hiddenSize)
 let inhSynapse = new Synapse(hiddenSize,hiddenSize,10,-40,eyeMatrix(hiddenSize,4))
@@ -43,8 +43,8 @@ let votesText = [...Array(10).keys()].map((v)=>makeh(v+"[0]"))
 
 let upscaleRate = 1.0
 function sample2rate(s){
-    let sm = sumArr(s)
-    return s.map(v=>v*upscaleRate/sm*40.0)
+    // let sm = sumArr(s)
+    return s.map(v=>v*upscaleRate/512)
 }
 
 function getNeuronClass(){
@@ -71,8 +71,8 @@ function autoTrain(){
     sampleSelector.selectNext()
     let fireCounts = new Array(hiddenSize).fill(0)
 
-    for(let i=0; i<4; i++){
-        upscaleRate = 1.0+0.1*i
+    for(let i=0; i<3; i++){
+        upscaleRate = 1.0+0.2*i
 
         periodInput.setFireRates(sample2rate(selectedSample.img))
         if(learning){
@@ -219,6 +219,7 @@ let main = makehbox([
             saveData(JSON.stringify({
                 neurons: neuronVotes,
                 weights: excSynapse.weights,
+                hemv: lifLayer.hemv
             }),"mnist_"+hiddenSize+".json")
         }),
         makeButton("RESET CW", ()=> {

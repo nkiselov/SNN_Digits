@@ -36,7 +36,8 @@ function makeSampleSelector(propList,dataset,callback){
     return {
         html: container,
         selectNext: ()=>{
-            number.value=parseInt(number.value)+1
+            if(number.value == number.max) number.value = 0
+            else number.value=parseInt(number.value)+1
             selectNum()
         }
     }

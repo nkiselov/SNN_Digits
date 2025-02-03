@@ -49,6 +49,110 @@ function readImagesLabels(imagesArrayBuffer, labelsArrayBuffer) {
         })
 }
 
+function imgBorder(img){
+    let ilim = 10
+    let borders = [0,0,0,0]
+    for(let x=0; x<MNIST_SIZE; x++){
+        let bad = false
+        for(let y=0; y<MNIST_SIZE; y++){
+            if(img[y*MNIST_SIZE+x]>ilim) bad = true
+        }
+        borders[0]=x
+        if(bad) break;
+    }
+    for(let x=MNIST_SIZE-1; x>=0; x--){
+        let bad = false
+        for(let y=0; y<MNIST_SIZE; y++){
+            if(img[y*MNIST_SIZE+x]>ilim) bad = true
+        }
+        borders[1]=MNIST_SIZE-1-x
+        if(bad) break;
+    }
+    for(let y=0; y<MNIST_SIZE; y++){
+        let bad = false
+        for(let x=0; x<MNIST_SIZE; x++){
+            if(img[y*MNIST_SIZE+x]>ilim) bad = true
+        }
+        borders[2]=y
+        if(bad) break;
+    }
+    for(let y=MNIST_SIZE-1; y>=0; y--){
+        let bad = false
+        for(let x=0; x<MNIST_SIZE; x++){
+            if(img[y*MNIST_SIZE+x]>ilim) bad = true
+        }
+        borders[3]=MNIST_SIZE-1-y
+        if(bad) break;
+    }
+    return borders
+}
+
+function resampleImg(dx,dy,img){
+    let newImg = Array(MNIST_SIZE*MNIST_SIZE).fill(0)
+    for(let x=0; x<MNIST_SIZE; x++){
+        for(let y=0; y<MNIST_SIZE; y++){
+            let nx = x+dx
+            let ny = y+dy
+            if(nx<0 || nx>=MNIST_SIZE || ny<0 || ny>=MNIST_SIZE) continue
+            newImg[ny*MNIST_SIZE+nx] = img[y*MNIST_SIZE+x]
+        }
+    }
+    return newImg
+}
+
+function shuffle(array) {
+    let currentIndex = array.length;
+  
+    // While there remain elements to shuffle...
+    while (currentIndex != 0) {
+  
+      // Pick a remaining element...
+      let randomIndex = Math.floor(Math.random() * currentIndex);
+      currentIndex--;
+  
+      // And swap it with the current element.
+      [array[currentIndex], array[randomIndex]] = [
+        array[randomIndex], array[currentIndex]];
+    }
+}
+
+function centerImage(img){
+    let ax = 0
+    let ay = 0
+    let sm = 0
+    for(let x=0; x<MNIST_SIZE; x++){
+        for(let y=0; y<MNIST_SIZE; y++){
+            ax+=img[y*MNIST_SIZE+x]*x
+            ay+=img[y*MNIST_SIZE+x]*y
+            sm+=img[y*MNIST_SIZE+x]
+        }
+    }
+    let dx = Math.round((MNIST_SIZE-1)/2-ax/sm)
+    let dy = Math.round((MNIST_SIZE-1)/2-ay/sm)
+    return resampleImg(dx,dy,img)
+}
+
+function augmentDataset(set){
+    return set.map((sample)=>{return{
+        img: centerImage(sample.img),
+        label: sample.label
+    }})
+    // let newSet = []
+    // for(let i=0; i<set.length; i++){
+    //     let brd = imgBorder(set[i].img)
+    //     for(let j=0; j<5; j++){
+    //         let dx = Math.round((brd[0]+brd[1])*Math.random()-brd[0]);
+    //         let dy = Math.round((brd[2]+brd[3])*Math.random()-brd[2]);
+    //         newSet.push({
+    //             img: resampleImg(dx,dy,set[i].img),
+    //             label: set[i].label
+    //         })
+    //     }
+    // }
+    // shuffle(newSet)
+    // return newSet
+}
+
 async function readMNIST(){
     fetch('')
     .then(res => res.blob())
@@ -65,8 +169,8 @@ async function readMNIST(){
     const [trainSet, trainLabel, testSet, testLabel] = await Promise.all(filePromises);
     
     return {
-        train: readImagesLabels(trainSet, trainLabel),
-        test: readImagesLabels(testSet, testLabel)
+        train: augmentDataset(readImagesLabels(trainSet, trainLabel)),
+        test: augmentDataset(readImagesLabels(testSet, testLabel))
     }
 }
 

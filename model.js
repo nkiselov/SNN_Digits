@@ -4,5 +4,5 @@ async function readModel(){
     .then(blob => {
         console.log(blob)
     });
-    return await fetch("./mnist_900.json").then(res=>res.json())
+    return await fetch("./mnist_400.json").then(res=>res.json())
 }

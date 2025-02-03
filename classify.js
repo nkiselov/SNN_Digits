@@ -1,15 +1,16 @@
 readModel().then(model=>{
 
 document.getElementById("loading").remove()
-
-let snn_size = 30
+console.log(model)
+let snn_size = 20
 let hiddenSize = snn_size*snn_size
 
 let periodInput = new PeriodicFireInput(MNIST_SIZE*MNIST_SIZE)
 let excSynapse = new Synapse(MNIST_SIZE*MNIST_SIZE,hiddenSize,10,100,model.weights)
 let inhibitOther = new InhibitOthers(hiddenSize)
 let inhSynapse = new Synapse(hiddenSize,hiddenSize,10,-40,eyeMatrix(hiddenSize,4))
-let lifLayer = new LIFLayer([excSynapse,inhSynapse],hiddenSize,20,0,40,0.2,100000)
+let lifLayer = new LIFLayer([excSynapse,inhSynapse],hiddenSize,20,0,40,0,Infinity)
+lifLayer.hemv = model.hemv
 let neuronVotes = model.neurons
 
 periodInput.outputs = [excSynapse]
@@ -40,18 +41,19 @@ makeMouser(sampleView.html,(x0,y0)=>{
 
 let upscaleRate = 1.0
 function sample2rate(s){
-    return s.map(v=>v*upscaleRate/4)
+    return s.map(v=>v*upscaleRate/2)
 }
+
+let signal = makeh("No signal")
 
 let votesText = [...Array(10).keys()].map((v)=>makeh(v+"[0]"))
 
 function runNet(){
     for(let i=0; i<4; i++){
-        upscaleRate = 1.0+0.15*i
+        upscaleRate = 1.0+0.2*i
 
-        periodInput.setFireRates(sample2rate(sampleArr))
-        lifLayer.hemv = new Array(hiddenSize).fill(8)
-
+        periodInput.setFireRates(sample2rate(centerImage(sampleArr)))
+        periodInput.relax()
         excSynapse.relax()
         inhSynapse.relax()
         lifLayer.relax()
@@ -84,8 +86,10 @@ function runNet(){
             votesText[i].innerHTML = votes[i][0]+"["+votes[i][1].toFixed(2)+"]"
         }
         console.log(inputSpikes,outputSpikes)
-        break
+        signal.innerHTML = ""
+        return
     }
+    signal.innerHTML = "No signal"
 }
 
 setInterval(runNet,50)
@@ -96,7 +100,7 @@ let main = makehbox([
             sampleArr = new Array(MNIST_SIZE*MNIST_SIZE).fill(0)
             renderSampleView()
         })]),
-    makevbox([...votesText])
+    makevbox([...votesText,signal])
 ])
 
 main.style = "gap: 20px; height:100%"
